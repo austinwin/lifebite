@@ -1,7 +1,7 @@
 # Lifebite - The Daily insight & personalized life advice
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/austinwin)  
 
-[Lifebite App](https://austinwin.github.io/lifebite/): https://austinwin.github.io/Lifebite/  
+[Lifebite App](https://austinwin.github.io/lifebite/): https://austinwin.github.io/lifebite/  
 LifeBite is a Progressive Web App (PWA) that helps you track daily moments and get personalized life advice. Log brief entries throughout your day, and the app will generate personalized insights and recommendations based on your activities.
 
 ## Features
