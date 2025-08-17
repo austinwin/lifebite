@@ -851,7 +851,7 @@ function addLog(){
   if(text.length>256){ alert('Max 256 characters.'); return; }
   if(inFuture(current)){ alert('Cannot add logs to future dates.'); return; }
   if(getSummary(current)){ 
-    alert('Cannot add logs after summary is generated. Clear all data first to add new logs.');
+    alert('No bites allowed after summary. Clear all data first to add new logs.');
     return;
   }
   const logs = getLogs();
@@ -866,7 +866,7 @@ function updateComposerState() {
   const hasSummary = getSummary(current) !== null;
   composer.disabled = hasSummary;
   sendBtn.disabled = hasSummary;
-  composer.placeholder = hasSummary ? "Cannot add logs after summary is generated" : "What happened? (max 256 chars)";
+  composer.placeholder = hasSummary ? "No bites allowed after summary" : "What happened? (max 256 chars)";
 }
 
 /* ---------- Clear Day ---------- */
