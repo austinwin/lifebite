@@ -518,6 +518,76 @@ textarea::-webkit-scrollbar{ display: none; }
 
 /* Inputs baseline */
 input, button, textarea { appearance: none; -webkit-appearance: none; border-radius: var(--radius); font-family: inherit; }
+
+/* ----------- MODEL BADGE & SELECT STYLES ----------- */
+.model-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 6px;
+  vertical-align: middle;
+  letter-spacing: 0.3px;
+  box-shadow: var(--shadow-sm);
+}
+.model-badge.basic {
+  background: rgba(124,140,255,.15);
+  color: var(--brand);
+  border: 1px solid rgba(124,140,255,.25);
+}
+.model-badge.advanced {
+  background: linear-gradient(135deg, rgba(124,140,255,.2), rgba(32,195,255,.2));
+  color: var(--brand-2);
+  border: 1px solid rgba(32,195,255,.3);
+}
+
+.select-wrapper {
+  position: relative;
+  width: 100%;
+}
+.select-wrapper::after {
+  content: "\f107";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--muted);
+}
+select {
+  appearance: none;
+  width: 100%;
+  padding: 12px 14px;
+  padding-right: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--elev);
+  color: var(--text);
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+select:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+.model-desc {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+  padding-left: 2px;
+  transition: opacity 0.15s ease;
+}
 </style>
 
 </head>
@@ -526,7 +596,11 @@ input, button, textarea { appearance: none; -webkit-appearance: none; border-rad
   <!-- Topbar -->
   <header>
     <div class="topbar">
-      <div class="logo"><i class="fa-solid fa-bolt"></i> LifeBite</div>
+      <div class="logo">
+        <i class="fa-solid fa-bolt"></i> 
+        LifeBite
+        <span id="modelBadge" class="model-badge basic">Basic</span>
+      </div>
       <div class="spacer"></div>
       <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
       <button class="icon-btn" id="settingsBtn" aria-label="Settings"><i class="fa-solid fa-gear"></i></button>
@@ -631,14 +705,19 @@ input, button, textarea { appearance: none; -webkit-appearance: none; border-rad
   <div class="dialog-card">
     <div class="dialog-title">Settings</div>
     <div class="dialog-body">
-      <div style="display:grid; gap:10px; margin-top:8px;">
-        <label style="font-size:12px; color:var(--muted);">AI Model</label>
-        <select id="modelSelect" style="padding:10px; border:1px solid var(--border); border-radius:12px; background:var(--elev); color:var(--text);">
-          <option value="free">Free Model</option>
-          <option value="paid">Paid Model (Premium)</option>
-        </select>
+      <div style="display:grid; gap:12px; margin-top:8px;">
+        <label style="font-size:13px; color:var(--text); font-weight:600;">AI Model</label>
+        <div class="select-wrapper">
+          <select id="modelSelect">
+            <option value="free">Basic Model</option>
+            <option value="paid">Advanced Model (Premium)</option>
+          </select>
+        </div>
+        <div id="modelDescription" class="model-desc">
+          Basic personalized advice for your daily logs.
+        </div>
 
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
           <button class="btn" id="exportBtn"><i class="fa-solid fa-file-export"></i> Export</button>
           <label class="btn" for="importInput" style="cursor:pointer;"><i class="fa-solid fa-file-import"></i> Import</label>
           <input id="importInput" type="file" accept="application/json" hidden />
@@ -702,6 +781,29 @@ function applyTheme(mode){
   else{ document.documentElement.setAttribute('data-theme', mode); }
   const dark = (mode==='system') ? window.matchMedia('(prefers-color-scheme: dark)').matches : (mode==='dark');
   $('#themeToggle').querySelector('i').className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+}
+
+/* ---------- Model Badge & Description ---------- */
+function updateModelUI(modelType = null) {
+  const model = modelType || getModel();
+  const badge = $('#modelBadge');
+  const description = $('#modelDescription');
+  
+  // Update badge
+  if (model === 'paid') {
+    badge.className = 'model-badge advanced';
+    badge.textContent = 'Advanced';
+  } else {
+    badge.className = 'model-badge basic';
+    badge.textContent = 'Basic';
+  }
+  
+  // Update description
+  if (model === 'paid') {
+    description.textContent = 'More personalized and detailed advice with advanced insights.';
+  } else {
+    description.textContent = 'Basic personalized advice for your daily logs.';
+  }
 }
 
 /* ---------- Header + Week Strip ---------- */
@@ -1063,14 +1165,27 @@ showOffline(!navigator.onLine);
 /* ---------- Settings / Export / Import ---------- */
 $('#settingsBtn').addEventListener('click', ()=>{ 
   $('#modelSelect').value = getModel(); 
+  updateModelUI();
   $('#settingsDialog').classList.add('open'); 
   $('#settingsDialog').setAttribute('aria-hidden','false'); 
 });
-$('#settingsClose').addEventListener('click', ()=>{ $('#settingsDialog').classList.remove('open'); $('#settingsDialog').setAttribute('aria-hidden','true'); });
-$('#saveSettings').addEventListener('click', ()=>{ 
-  setModel($('#modelSelect').value); 
+
+$('#settingsClose').addEventListener('click', ()=>{ 
   $('#settingsDialog').classList.remove('open'); 
   $('#settingsDialog').setAttribute('aria-hidden','true'); 
+});
+
+$('#saveSettings').addEventListener('click', ()=>{ 
+  const newModel = $('#modelSelect').value;
+  setModel(newModel); 
+  updateModelUI(newModel);
+  $('#settingsDialog').classList.remove('open'); 
+  $('#settingsDialog').setAttribute('aria-hidden','true'); 
+});
+
+// Update description when dropdown changes
+$('#modelSelect').addEventListener('change', function() {
+  updateModelUI(this.value);
 });
 
 $('#exportBtn').addEventListener('click', ()=>{
@@ -1096,6 +1211,7 @@ function init(){
   renderHeader(); renderWeekStrip(); renderLogs(); renderCalendar();
   updateComposerState();
   if(!localStorage.getItem(keyModel)){ setModel('free'); }
+  updateModelUI();
   const mql = window.matchMedia('(prefers-color-scheme: dark)');
   mql.addEventListener?.('change', ()=>{ if((localStorage.getItem(keyTheme)||'system')==='system') applyTheme('system'); });
   updateWeekLayout();
