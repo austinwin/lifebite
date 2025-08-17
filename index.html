@@ -681,8 +681,13 @@ function dayHasLogs(d){ return getLogs(d).length > 0; }
 function streak(){ let s=0, d=new Date(today); while(dayHasLogs(d)){ s++; d.setDate(d.getDate()-1); } return s; }
 
 /* ---------- Theme ---------- */
-const themeStored = localStorage.getItem(keyTheme) || 'system';
+let themeStored = localStorage.getItem(keyTheme);
+if (!themeStored) {
+  themeStored = 'dark';
+  localStorage.setItem(keyTheme, 'dark');
+}
 applyTheme(themeStored);
+
 $('#themeToggle').addEventListener('click', ()=>{ const cur = localStorage.getItem(keyTheme) || 'system'; const next = (cur==='system') ? 'dark' : (cur==='dark' ? 'light' : 'system'); localStorage.setItem(keyTheme,next); applyTheme(next); });
 $('#themeSystem').addEventListener('click', ()=>{ localStorage.setItem(keyTheme,'system'); applyTheme('system'); });
 $('#themeLight').addEventListener('click', ()=>{ localStorage.setItem(keyTheme,'light'); applyTheme('light'); });
