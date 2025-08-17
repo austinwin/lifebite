@@ -632,8 +632,11 @@ input, button, textarea { appearance: none; -webkit-appearance: none; border-rad
     <div class="dialog-title">Settings</div>
     <div class="dialog-body">
       <div style="display:grid; gap:10px; margin-top:8px;">
-        <label style="font-size:12px; color:var(--muted);">AI Endpoint</label>
-        <input id="endpoint" style="padding:10px; border:1px solid var(--border); border-radius:12px; background:var(--elev); color:var(--text);" value="https://lifebite.vercel.app/api/lifebite" />
+        <label style="font-size:12px; color:var(--muted);">AI Model</label>
+        <select id="modelSelect" style="padding:10px; border:1px solid var(--border); border-radius:12px; background:var(--elev); color:var(--text);">
+          <option value="free">Free Model</option>
+          <option value="paid">Paid Model (Premium)</option>
+        </select>
 
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn" id="exportBtn"><i class="fa-solid fa-file-export"></i> Export</button>
@@ -668,15 +671,16 @@ const STORAGE_PREFIX = 'lifebite';
 const keyLogs = (d)=> `${STORAGE_PREFIX}:logs:${fmtISO(d)}`;
 const keySummary = (d)=> `${STORAGE_PREFIX}:summary:${fmtISO(d)}`;
 const keyTheme = `${STORAGE_PREFIX}:theme`;
-const keyEndpoint = `${STORAGE_PREFIX}:endpoint`;
+const keyModel = `${STORAGE_PREFIX}:model`;
 const keyQueue = `${STORAGE_PREFIX}:queue`;
 
 function getLogs(d=current){ try{ return JSON.parse(localStorage.getItem(keyLogs(d))||'[]'); }catch{ return []; } }
 function setLogs(arr, d=current){ localStorage.setItem(keyLogs(d), JSON.stringify(arr)); }
 function getSummary(d=current){ try{ return JSON.parse(localStorage.getItem(keySummary(d))||'null'); }catch{ return null; } }
 function setSummary(obj, d=current){ localStorage.setItem(keySummary(d), JSON.stringify(obj)); }
-function getEndpoint(){ return localStorage.getItem(keyEndpoint) || $('#endpoint')?.value || 'https://lifebite.vercel.app/api/lifebite'; }
-function setEndpoint(v){ localStorage.setItem(keyEndpoint, v); }
+function getModel(){ return localStorage.getItem(keyModel) || 'free'; }
+function setModel(v){ localStorage.setItem(keyModel, v); }
+function getEndpoint(){ return 'https://lifebite.vercel.app/api/lifebite'; }
 function dayHasLogs(d){ return getLogs(d).length > 0; }
 function streak(){ let s=0, d=new Date(today); while(dayHasLogs(d)){ s++; d.setDate(d.getDate()-1); } return s; }
 
@@ -993,7 +997,11 @@ async function generateSummary(){
   resultsContainer.innerHTML='';
   errorState.hidden = true;
 
-  const payload = { date: fmtISO(current), logs: logs.map(l=>l.text) };
+  const payload = { 
+    date: fmtISO(current), 
+    logs: logs.map(l=>l.text),
+    model: getModel() // Add model parameter
+  };
   const endpoint = getEndpoint();
 
   if(!navigator.onLine){
@@ -1053,9 +1061,17 @@ window.addEventListener('offline', ()=>showOffline(true));
 showOffline(!navigator.onLine);
 
 /* ---------- Settings / Export / Import ---------- */
-$('#settingsBtn').addEventListener('click', ()=>{ $('#endpoint').value = getEndpoint(); $('#settingsDialog').classList.add('open'); $('#settingsDialog').setAttribute('aria-hidden','false'); });
+$('#settingsBtn').addEventListener('click', ()=>{ 
+  $('#modelSelect').value = getModel(); 
+  $('#settingsDialog').classList.add('open'); 
+  $('#settingsDialog').setAttribute('aria-hidden','false'); 
+});
 $('#settingsClose').addEventListener('click', ()=>{ $('#settingsDialog').classList.remove('open'); $('#settingsDialog').setAttribute('aria-hidden','true'); });
-$('#saveSettings').addEventListener('click', ()=>{ setEndpoint($('#endpoint').value.trim()); $('#settingsDialog').classList.remove('open'); $('#settingsDialog').setAttribute('aria-hidden','true'); });
+$('#saveSettings').addEventListener('click', ()=>{ 
+  setModel($('#modelSelect').value); 
+  $('#settingsDialog').classList.remove('open'); 
+  $('#settingsDialog').setAttribute('aria-hidden','true'); 
+});
 
 $('#exportBtn').addEventListener('click', ()=>{
   const blob = new Blob([JSON.stringify(Object.entries(localStorage).reduce((obj,[k,v])=>{ if(k.startsWith(STORAGE_PREFIX)) obj[k]=v; return obj; },{}), null, 2)], {type:'application/json'});
@@ -1079,7 +1095,7 @@ function init(){
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{}); }
   renderHeader(); renderWeekStrip(); renderLogs(); renderCalendar();
   updateComposerState();
-  if(!localStorage.getItem(keyEndpoint)){ setEndpoint(getEndpoint()); }
+  if(!localStorage.getItem(keyModel)){ setModel('free'); }
   const mql = window.matchMedia('(prefers-color-scheme: dark)');
   mql.addEventListener?.('change', ()=>{ if((localStorage.getItem(keyTheme)||'system')==='system') applyTheme('system'); });
   updateWeekLayout();
