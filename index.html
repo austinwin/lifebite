@@ -451,6 +451,26 @@
       max-height: 100%;
     }
     
+    /* Add log item styling */
+    .log-item {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .log-item:last-child {
+      border-bottom: none;
+    }
+    
+    .log-time {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    
+    .log-content {
+      line-height: 1.5;
+    }
+    
     /* Add resultsPanel and resultsContainer styling for scrolling */
     #resultsPanel {
       display: flex;
@@ -1182,10 +1202,21 @@ function renderLogs(){
     emptyState.hidden = true; logList.hidden = false;
     logs.forEach(l=>{
       const li = document.createElement('li'); li.className='log-item';
-      const txt = document.createElement('div'); txt.textContent = l.text;
-      const tm  = document.createElement('div'); tm.className='log-time';
-      const d = new Date(l.timestamp); tm.textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      li.appendChild(txt); li.appendChild(tm); logList.appendChild(li);
+      
+      // Create and append timestamp first
+      const tm = document.createElement('div'); tm.className='log-time';
+      const d = new Date(l.timestamp);
+      tm.textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      
+      // Create and append text content
+      const txt = document.createElement('div'); 
+      txt.className = 'log-content';
+      txt.textContent = l.text;
+      
+      // Append in order: timestamp at top, then content
+      li.appendChild(tm);
+      li.appendChild(txt);
+      logList.appendChild(li);
     });
     logList.scrollTop = 0;
   }
