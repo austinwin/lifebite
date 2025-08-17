@@ -1,4 +1,4 @@
-# Lifebite - The Daily Insight & personalized life advice
+# Lifebite - The Daily insight & personalized life advice
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/austinwin)  
 
 [Lifebite App](https://austinwin.github.io/lifebite/): https://austinwin.github.io/Lifebite/  
