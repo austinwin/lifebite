@@ -1245,6 +1245,11 @@ $('#genSummary').addEventListener('click', ()=>{
   generateSummary();
 });
 
+$('#savedBadge').addEventListener('click', () => {
+  const saved = getSummary();
+  if (saved) displayResults(saved);
+});
+
 function renderResultsBadge(){ $('#savedBadge').style.display = getSummary(current) ? 'inline-flex' : 'none'; }
 
 function displayResults(result){
