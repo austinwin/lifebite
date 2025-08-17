@@ -1,10 +1,13 @@
-const CACHE_NAME = 'lifebite-v1';
+const CACHE_NAME = 'lifebite-v2';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+  './',
+  './index.html',
+  './manifest.json',
+  './icons/icon-192x192.png',
+  './icons/icon-512x512.png',
+  './icons/favicon.png',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
 
 // Install service worker and cache assets
@@ -33,20 +36,21 @@ self.addEventListener('activate', event => {
 });
 
 // Serve cached content when offline
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).then(
-          response => {
-            // Return the response
-            return response;
-          }
-        );
-      })
-  );
+self.addEventListener('fetch', e=>{
+  const req = e.request;
+  if(req.method !== 'GET') return; // don’t hijack POSTs (AI calls)
+  const url = new URL(req.url);
+
+  // Don’t cache cross-origin APIs by default
+  if(url.origin !== location.origin) return;
+
+  e.respondWith((async ()=>{
+    const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(req);
+    const fetcher = fetch(req).then(res=>{
+      if(res.ok){ cache.put(req, res.clone()); }
+      return res;
+    }).catch(()=>cached);
+    return cached || fetcher;
+  })());
 });
