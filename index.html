@@ -461,10 +461,34 @@
       border-bottom: none;
     }
     
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    
     .log-time {
       font-size: 12px;
       color: var(--muted);
-      margin-bottom: 4px;
+    }
+    
+    .log-delete {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+    }
+    
+    .log-delete:hover {
+      color: var(--err);
+      background: rgba(239,68,68,0.1);
     }
     
     .log-content {
@@ -565,7 +589,7 @@
       display: grid;
       grid-template-columns: 1fr 52px;
       gap: 12px;
-      align-items: stretch;
+      align-items: flex-start;
     }
     
     textarea{
@@ -584,11 +608,6 @@
       transition: border-color 0.15s ease;
     }
     
-    textarea:focus {
-      border-color: var(--brand);
-      box-shadow: 0 0 0 2px var(--ring);
-    }
-    
     .send{
       appearance: none;
       border: 0;
@@ -602,6 +621,7 @@
       place-items: center;
       box-shadow: var(--shadow);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
+      height: 52px;
     }
     
     .send:hover {
@@ -938,13 +958,12 @@ textarea::-webkit-scrollbar {
         <div style="display:flex; align-items:center; gap:8px;">
           <div id="logsTitle" style="font-weight:700;">Bites</div>
           <div class="badges">
-            <span id="savedBadge" class="btn-outline btn-accent">Saved</span>
             <span id="analyzingSpin" class="spin" hidden title="Analyzing"></span>
           </div>
         </div>
         <div class="logs-actions">
           <button class="btn-outline btn-danger" id="clearDay"><i class="fa-solid fa-trash"></i> Clear</button>
-          <button class="btn-outline" id="genSummary"><i class="fa-solid fa-brain"></i> Summary</button>
+          <button class="btn-outline" id="genSummary"><i class="fa-solid fa-brain"></i> <span id="summaryBtnText">Summary</span></button>
         </div>
       </div>
 
@@ -969,12 +988,12 @@ textarea::-webkit-scrollbar {
   <!-- Composer -->
   <div class="composer" id="composerWrap">
     <div class="compose-row">
-      <textarea id="composer" placeholder="What happened? (max 280 chars)" maxlength="280" rows="1"></textarea>
+      <textarea id="composer" placeholder="What happened? (max 256 chars)" maxlength="256" rows="1"></textarea>
       <button class="send" id="send"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
     <div class="meta">
       <div id="streakText">Streak: 0</div>
-      <div><span id="charCount" class="count">0/280</span></div>
+      <div><span id="charCount" class="count">0/256</span></div>
     </div>
   </div>
 </div>
@@ -1088,8 +1107,23 @@ function renderHeader(){
   $('#logsTitle').textContent = isToday ? "Bites" : "Bites";
   $('#nextDay').disabled = isToday;
   $('#jumpToday').disabled = isToday;
-  $('#savedBadge').style.display = getSummary(current) ? 'inline-flex' : 'none';
+  updateSummaryButton();
   $('#streakText').textContent = `Streak: ${streak()}`;
+}
+
+// New function to update summary button text based on whether a summary exists
+function updateSummaryButton() {
+  const summaryExists = getSummary(current) !== null;
+  const btnIcon = $('#genSummary i');
+  const btnText = $('#summaryBtnText');
+  
+  if (summaryExists) {
+    btnIcon.className = 'fa-solid fa-check';
+    btnText.textContent = 'View Summary';
+  } else {
+    btnIcon.className = 'fa-solid fa-brain';
+    btnText.textContent = 'Summary';
+  }
 }
 
 function weekStart(d){ const t = new Date(d); const diff = t.getDay(); t.setDate(t.getDate()-diff); return t; }
@@ -1183,7 +1217,8 @@ $('#jumpToday').addEventListener('click', ()=>{ current = new Date(today); after
 function navigate(offset){ const nd = new Date(current); nd.setDate(current.getDate()+offset); current = clampToToday(nd); afterDateChanged(); }
 
 function afterDateChanged(){
-  renderHeader(); renderWeekStrip(); renderLogs(); renderResultsBadge();
+  renderHeader(); renderWeekStrip(); renderLogs();
+  updateComposerState();
   $('#resultsPanel').hidden = true;
   $('.panel.flex-col').hidden = false;
   layoutPass();
@@ -1200,25 +1235,65 @@ function renderLogs(){
     emptyState.hidden = false; logList.hidden = true;
   }else{
     emptyState.hidden = true; logList.hidden = false;
-    logs.forEach(l=>{
-      const li = document.createElement('li'); li.className='log-item';
+    const hasSummary = getSummary(current) !== null;
+    
+    logs.forEach((l, index) => {
+      const li = document.createElement('li'); 
+      li.className = 'log-item';
       
-      // Create and append timestamp first
-      const tm = document.createElement('div'); tm.className='log-time';
+      // Create the log header that contains timestamp and delete button
+      const logHeader = document.createElement('div');
+      logHeader.className = 'log-header';
+      
+      // Create and append timestamp
+      const tm = document.createElement('div'); 
+      tm.className = 'log-time';
       const d = new Date(l.timestamp);
       tm.textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      logHeader.appendChild(tm);
+      
+      // Add delete button if no summary exists
+      if (!hasSummary) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'log-delete';
+        deleteBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        deleteBtn.title = 'Delete this log';
+        deleteBtn.addEventListener('click', () => deleteLog(index));
+        logHeader.appendChild(deleteBtn);
+      }
+      
+      li.appendChild(logHeader);
       
       // Create and append text content
       const txt = document.createElement('div'); 
       txt.className = 'log-content';
       txt.textContent = l.text;
-      
-      // Append in order: timestamp at top, then content
-      li.appendChild(tm);
       li.appendChild(txt);
+      
       logList.appendChild(li);
     });
     logList.scrollTop = 0;
+  }
+}
+
+function deleteLog(index){
+  // Check if summary exists first
+  if (getSummary(current)) {
+    alert('Cannot delete logs after a summary is generated. Clear all data first.');
+    return;
+  }
+  
+  const logs = getLogs();
+  logs.splice(index, 1);
+  setLogs(logs);
+  renderLogs();
+  renderWeekStrip();
+  renderHeader();
+  
+  // Show empty state if all logs are deleted
+  if (logs.length === 0) {
+    emptyState.hidden = false;
+    logList.hidden = true;
   }
 }
 
@@ -1231,8 +1306,8 @@ composer.addEventListener('input', ()=>{
   composer.style.height = 'auto';
   composer.style.height = Math.min(composer.scrollHeight, 144) + 'px';
   const len = composer.value.length;
-  charCount.textContent = `${len}/280`;
-  charCount.classList.toggle('limit', len>250);
+  charCount.textContent = `${len}/256`;
+  charCount.classList.toggle('limit', len>225);
   layoutPass();
 });
 composer.addEventListener('keydown', (e)=>{
@@ -1243,8 +1318,14 @@ sendBtn.addEventListener('click', addLog);
 function addLog(){
   const text = composer.value.trim();
   if(!text) return;
-  if(text.length>280){ alert('Max 280 characters.'); return; }
+  if(text.length>256){ alert('Max 256 characters.'); return; }
   if(inFuture(current)){ alert('Cannot add logs to future dates.'); return; }
+  
+  // Check if summary exists
+  if(getSummary(current)){ 
+    alert('Cannot add logs after summary is generated. Clear all data first to add new logs.');
+    return;
+  }
 
   const logs = getLogs();
   logs.unshift({ text, timestamp: new Date().toISOString() });
@@ -1252,6 +1333,17 @@ function addLog(){
   composer.value=''; composer.dispatchEvent(new Event('input'));
   renderLogs(); renderWeekStrip(); renderHeader();
   emptyState.hidden = true; logList.hidden = false;
+}
+
+function updateComposerState() {
+  const hasSummary = getSummary(current) !== null;
+  composer.disabled = hasSummary;
+  sendBtn.disabled = hasSummary;
+  if (hasSummary) {
+    composer.placeholder = "Cannot add logs after summary is generated";
+  } else {
+    composer.placeholder = "What happened? (max 256 chars)";
+  }
 }
 
 /* ---------- Clear Day (also hide/clear visible summary) ---------- */
@@ -1269,7 +1361,11 @@ $('#confirmOk').addEventListener('click', ()=>{
   $('#resultsContainer').innerHTML = '';
   $('#errorState').hidden = true;
 
-  renderLogs(); renderResultsBadge(); renderWeekStrip(); renderHeader();
+  renderLogs(); 
+  renderWeekStrip(); 
+  renderHeader();
+  updateSummaryButton(); // Make sure to update the button after clearing
+  updateComposerState();
   confirmDlg.classList.remove('open'); confirmDlg.setAttribute('aria-hidden','true');
   layoutPass();
 });
@@ -1291,16 +1387,9 @@ $('#backToLogs').addEventListener('click', () => {
   $('.panel.flex-col').hidden = false;
 });
 
-$('#savedBadge').addEventListener('click', () => {
-  const saved = getSummary();
-  if (saved) displayResults(saved);
-});
-
 function renderResultsBadge(){ $('#savedBadge').style.display = getSummary(current) ? 'inline-flex' : 'none'; }
 
 function displayResults(result){
-  analyzingSpin.hidden = true;
-  errorState.hidden = true;
   resultsPanel.hidden = false;
   // Hide logs panel when showing results
   $('.panel.flex-col').hidden = true;
@@ -1312,7 +1401,8 @@ function displayResults(result){
   html += section('Schedule Adjustments', result.schedule_tweaks, 'fa-calendar-alt');
   html += section('Next Actions', result.next_actions, 'fa-square-check');
   resultsContainer.innerHTML = html;
-  renderResultsBadge();
+  updateSummaryButton();
+  updateComposerState();
   resultsPanel.scrollIntoView({behavior:'smooth'});
   layoutPass();
 }
@@ -1327,7 +1417,17 @@ async function generateSummary(){
   const logs = getLogs();
   if(!logs.length){ alert('Add at least one log first.'); return; }
 
-  analyzingSpin.hidden = false;
+  // Update button to show loading state
+  const summaryBtn = $('#genSummary');
+  const btnIcon = $('#genSummary i');
+  const btnText = $('#summaryBtnText');
+  const originalIcon = btnIcon.className;
+  const originalText = btnText.textContent;
+  
+  btnIcon.className = 'fa-solid fa-spinner fa-spin';
+  btnText.textContent = 'Thinking...';
+  summaryBtn.disabled = true;
+
   resultsPanel.hidden = true;
   resultsContainer.innerHTML='';
   errorState.hidden = true;
@@ -1337,9 +1437,13 @@ async function generateSummary(){
 
   if(!navigator.onLine){
     enqueue({ type:'summary', endpoint, payload });
-    analyzingSpin.hidden = true;
     errorState.hidden = false; errorState.textContent = 'Offline. Queued—will run automatically when back online.';
     resultsPanel.hidden = false;
+    
+    // Restore button
+    btnIcon.className = originalIcon;
+    btnText.textContent = originalText;
+    summaryBtn.disabled = false;
     return;
   }
 
@@ -1348,9 +1452,83 @@ async function generateSummary(){
     if(!res.ok) throw new Error(String(res.status));
     const data = await res.json();
     setSummary(data.result, current);
+    
+    // Update button to show success state
+    btnIcon.className = 'fa-solid fa-check';
+    btnText.textContent = 'View Summary';
+    summaryBtn.disabled = false;
+    
     displayResults(data.result);
   }catch(e){
-    analyzingSpin.hidden = true;
+    // Restore button on error
+    btnIcon.className = originalIcon;
+    btnText.textContent = originalText;
+    summaryBtn.disabled = false;
+    
+    resultsPanel.hidden = false;
+    errorState.hidden = false;
+  }
+}
+
+function section(title, items, icon){
+  if(!items || !items.length) return '';
+  const lis = items.map(i=>`<li>${escapeHTML(i)}</li>`).join('');
+  return `<div class="result-card"><div class="result-head"><i class="fa-solid ${icon}"></i> ${title}</div><ul class="result-list">${lis}</ul></div>`;
+}
+function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+async function generateSummary(){
+  const logs = getLogs();
+  if(!logs.length){ alert('Add at least one log first.'); return; }
+
+  // Update button to show loading state
+  const summaryBtn = $('#genSummary');
+  const btnIcon = $('#genSummary i');
+  const btnText = $('#summaryBtnText');
+  const originalIcon = btnIcon.className;
+  const originalText = btnText.textContent;
+  
+  btnIcon.className = 'fa-solid fa-spinner fa-spin';
+  btnText.textContent = 'Thinking...';
+  summaryBtn.disabled = true;
+
+  resultsPanel.hidden = true;
+  resultsContainer.innerHTML='';
+  errorState.hidden = true;
+
+  const payload = { date: fmtISO(current), logs: logs.map(l=>l.text) };
+  const endpoint = getEndpoint();
+
+  if(!navigator.onLine){
+    enqueue({ type:'summary', endpoint, payload });
+    errorState.hidden = false; errorState.textContent = 'Offline. Queued—will run automatically when back online.';
+    resultsPanel.hidden = false;
+    
+    // Restore button
+    btnIcon.className = originalIcon;
+    btnText.textContent = originalText;
+    summaryBtn.disabled = false;
+    return;
+  }
+
+  try{
+    const res = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    if(!res.ok) throw new Error(String(res.status));
+    const data = await res.json();
+    setSummary(data.result, current);
+    
+    // Update button to show success state
+    btnIcon.className = 'fa-solid fa-check';
+    btnText.textContent = 'View Summary';
+    summaryBtn.disabled = false;
+    
+    displayResults(data.result);
+  }catch(e){
+    // Restore button on error
+    btnIcon.className = originalIcon;
+    btnText.textContent = originalText;
+    summaryBtn.disabled = false;
+    
     resultsPanel.hidden = false;
     errorState.hidden = false;
   }
@@ -1374,7 +1552,8 @@ async function flushQueue(){
       }catch{}
     }
   }
-  setQueue([]); showOffline(false); renderResultsBadge();
+  setQueue([]); showOffline(false); 
+  updateSummaryButton(); // Update button after offline queue is processed
 }
 
 /* ---------- Connectivity banner ---------- */
@@ -1423,6 +1602,7 @@ window.addEventListener('orientationchange', ()=>{ setTimeout(layoutPass, 50); }
 function init(){
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{}); }
   renderHeader(); renderWeekStrip(); renderLogs(); renderResultsBadge(); renderCalendar();
+  updateComposerState();
   if(!localStorage.getItem(keyEndpoint)){ setEndpoint(getEndpoint()); }
   layoutPass();
   const mql = window.matchMedia('(prefers-color-scheme: dark)');
