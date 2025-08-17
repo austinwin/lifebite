@@ -342,7 +342,7 @@
 
     /* ----------- CONTENT ----------- */
     main{
-      padding: 0 var(--container-pad) var(--content-gap);
+      padding: var(--content-gap) var(--container-pad) var(--content-gap);
       width: 100%;
       display: flex;
       flex-direction: column;
@@ -451,36 +451,30 @@
       max-height: 100%;
     }
     
-    .log-item{ 
-      border-top: 1px solid var(--border);
-      padding: 12px 6px;
-      display: grid;
-      gap: 6px;
+    /* Add resultsPanel and resultsContainer styling for scrolling */
+    #resultsPanel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1;
     }
     
-    .log-item:first-child{ 
-      border-top: 0;
+    #resultsContainer {
+      overflow-y: auto;
+      scrollbar-width: thin;
+      max-height: calc(100vh - 300px);
+      min-height: 200px;
     }
     
-    .log-time{ 
-      font-size: 12px;
-      color: var(--muted);
+    #resultsContainer::-webkit-scrollbar {
+      width: 6px;
     }
     
-    .empty{ 
-      display: grid;
-      place-items: center;
-      padding: 48px 0;
-      color: var(--muted);
-      text-align: center;
-      gap: 12px;
+    #resultsContainer::-webkit-scrollbar-thumb {
+      background-color: var(--muted);
+      border-radius: var(--radius-full);
     }
     
-    .empty i {
-      font-size: 24px;
-      opacity: 0.7;
-    }
-
     .result-card + .result-card{ 
       margin-top: 16px;
       padding-top: 16px;
@@ -505,6 +499,18 @@
       font-weight: 500;
       margin-bottom: 16px;
       line-height: 1.6;
+      max-height: 300px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    
+    .summary::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .summary::-webkit-scrollbar-thumb {
+      background-color: var(--muted);
+      border-radius: var(--radius-full);
     }
     
     .result-list{ 
@@ -910,7 +916,7 @@ textarea::-webkit-scrollbar {
     <section class="panel flex-col" aria-labelledby="logsTitle">
       <div class="logs-head">
         <div style="display:flex; align-items:center; gap:8px;">
-          <div id="logsTitle" style="font-weight:700;">Today's Logs</div>
+          <div id="logsTitle" style="font-weight:700;">Bites</div>
           <div class="badges">
             <span id="savedBadge" class="btn-outline btn-accent">Saved</span>
             <span id="analyzingSpin" class="spin" hidden title="Analyzing"></span>
@@ -931,6 +937,10 @@ textarea::-webkit-scrollbar {
 
     <!-- Results -->
     <section class="panel" id="resultsPanel" hidden>
+      <div class="logs-head">
+        <div style="font-weight:700;">Summary</div>
+        <button class="btn-outline" id="backToLogs"><i class="fa-solid fa-arrow-left"></i> Back to Logs</button>
+      </div>
       <div id="resultsContainer"></div>
       <div class="error" id="errorState" hidden><i class="fa-solid fa-circle-exclamation"></i> Couldn't generate advice. Try again.</div>
     </section>
@@ -1055,7 +1065,7 @@ function renderHeader(){
   const isToday = current.getTime()===today.getTime();
   $('#dateMain').textContent = isToday ? 'Today' : `${monthsLong[current.getMonth()]} ${current.getDate()}, ${current.getFullYear()}`;
   $('#dateSub').textContent = `${daysShort[current.getDay()]}, ${monthsLong[current.getMonth()].slice(0,3)} ${current.getDate()}`;
-  $('#logsTitle').textContent = isToday ? "Today's Logs" : "Logs";
+  $('#logsTitle').textContent = isToday ? "Bites" : "Bites";
   $('#nextDay').disabled = isToday;
   $('#jumpToday').disabled = isToday;
   $('#savedBadge').style.display = getSummary(current) ? 'inline-flex' : 'none';
@@ -1243,6 +1253,11 @@ $('#genSummary').addEventListener('click', ()=>{
   const saved = getSummary();
   if(saved){ displayResults(saved); return; }
   generateSummary();
+});
+
+$('#backToLogs').addEventListener('click', () => {
+  resultsPanel.hidden = true;
+  $('.panel.flex-col').hidden = false;
 });
 
 $('#savedBadge').addEventListener('click', () => {
