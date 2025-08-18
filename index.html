@@ -599,7 +599,7 @@ select:focus {
       <div class="logo">
         <i class="fa-solid fa-bolt"></i> 
         LifeBite
-        <span id="modelBadge" class="model-badge basic">Basic</span>
+        <span id="modelBadge" class="model-badge basic" style="cursor:pointer;" title="Click to switch model">Basic</span>
       </div>
       <div class="spacer"></div>
       <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
@@ -1219,6 +1219,17 @@ function init(){
 init();
 window.addEventListener('resize', ()=>{ requestAnimationFrame(updateWeekLayout); });
 window.addEventListener('orientationchange', ()=>{ setTimeout(updateWeekLayout, 60); });
+
+// Add click-to-toggle for model badge in header
+$('#modelBadge').addEventListener('click', () => {
+  const currentModel = getModel();
+  const nextModel = currentModel === 'free' ? 'paid' : 'free';
+  setModel(nextModel);
+  updateModelUI(nextModel);
+  // Also update the select in settings dialog if open
+  const modelSelect = $('#modelSelect');
+  if (modelSelect) modelSelect.value = nextModel;
+});
 </script>
 </body>
 </html>
