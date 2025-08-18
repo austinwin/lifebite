@@ -2,7 +2,7 @@
   "name": "LifeBite",
   "short_name": "LifeBite",
   "description": "Track daily moments and get personalized life advice.",
-  "start_url": "https://austinwin.github.io/lifebite/",
+  "start_url": "https://lifebite.app",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
