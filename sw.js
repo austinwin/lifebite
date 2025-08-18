@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lifebite-v2.2';
+const CACHE_NAME = 'lifebite-v2.3';
 const urlsToCache = [
   './',
   './index.html',
