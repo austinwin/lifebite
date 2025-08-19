@@ -599,7 +599,7 @@ select:focus {
       <div class="logo">
         <i class="fa-solid fa-bolt"></i> 
         LifeBite
-        <span id="modelBadge" class="model-badge basic" style="cursor:pointer;" title="Click to switch model">Basic</span>
+        <span id="modelBadge" class="model-badge advanced" style="cursor:pointer;" title="Click to switch model">Advance</span>
       </div>
       <div class="spacer"></div>
       <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
@@ -709,12 +709,13 @@ select:focus {
         <label style="font-size:13px; color:var(--text); font-weight:600;">AI Model</label>
         <div class="select-wrapper">
           <select id="modelSelect">
-            <option value="free">Basic Model</option>
-            <option value="paid">Advanced Model (Premium)</option>
+            <option value="basic">Basic Model</option>
+            <option value="advance">Advance Model (Default)</option>
+            <option value="pro">Pro Model</option>
           </select>
         </div>
         <div id="modelDescription" class="model-desc">
-          Basic personalized advice for your daily logs.
+          Balanced, personalized advice for your daily logs.
         </div>
 
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
@@ -757,7 +758,7 @@ function getLogs(d=current){ try{ return JSON.parse(localStorage.getItem(keyLogs
 function setLogs(arr, d=current){ localStorage.setItem(keyLogs(d), JSON.stringify(arr)); }
 function getSummary(d=current){ try{ return JSON.parse(localStorage.getItem(keySummary(d))||'null'); }catch{ return null; } }
 function setSummary(obj, d=current){ localStorage.setItem(keySummary(d), JSON.stringify(obj)); }
-function getModel(){ return localStorage.getItem(keyModel) || 'free'; }
+function getModel(){ return localStorage.getItem(keyModel) || 'advance'; }
 function setModel(v){ localStorage.setItem(keyModel, v); }
 function getEndpoint(){ return 'https://lifebite.vercel.app/api/lifebite'; }
 function dayHasLogs(d){ return getLogs(d).length > 0; }
@@ -790,17 +791,22 @@ function updateModelUI(modelType = null) {
   const description = $('#modelDescription');
   
   // Update badge
-  if (model === 'paid') {
+  if (model === 'pro') {
     badge.className = 'model-badge advanced';
-    badge.textContent = 'Advanced';
+    badge.textContent = 'Pro';
+  } else if (model === 'advance') {
+    badge.className = 'model-badge advanced';
+    badge.textContent = 'Advance';
   } else {
     badge.className = 'model-badge basic';
     badge.textContent = 'Basic';
   }
   
   // Update description
-  if (model === 'paid') {
-    description.textContent = 'More personalized and detailed advice with advanced insights.';
+  if (model === 'pro') {
+    description.textContent = 'Most detailed, nuanced, and actionable advice. Best for deep insights.';
+  } else if (model === 'advance') {
+    description.textContent = 'Balanced, personalized advice for your daily logs.';
   } else {
     description.textContent = 'Basic personalized advice for your daily logs.';
   }
@@ -1210,7 +1216,7 @@ function init(){
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{}); }
   renderHeader(); renderWeekStrip(); renderLogs(); renderCalendar();
   updateComposerState();
-  if(!localStorage.getItem(keyModel)){ setModel('paid'); }
+  if(!localStorage.getItem(keyModel)){ setModel('advance'); }
   updateModelUI();
   const mql = window.matchMedia('(prefers-color-scheme: dark)');
   mql.addEventListener?.('change', ()=>{ if((localStorage.getItem(keyTheme)||'system')==='system') applyTheme('system'); });
@@ -1223,7 +1229,9 @@ window.addEventListener('orientationchange', ()=>{ setTimeout(updateWeekLayout, 
 // Add click-to-toggle for model badge in header
 $('#modelBadge').addEventListener('click', () => {
   const currentModel = getModel();
-  const nextModel = currentModel === 'free' ? 'paid' : 'free';
+  const order = ['basic', 'advance', 'pro'];
+  const idx = order.indexOf(currentModel);
+  const nextModel = order[(idx + 1) % order.length];
   setModel(nextModel);
   updateModelUI(nextModel);
   // Also update the select in settings dialog if open
