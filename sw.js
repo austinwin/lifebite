@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lifebite-v2.3';
+const CACHE_NAME = 'lifebite-v3.0';
 const urlsToCache = [
   './',
   './index.html',
@@ -54,3 +54,4 @@ self.addEventListener('fetch', e=>{
     return cached || fetcher;
   })());
 });
+
