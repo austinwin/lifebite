@@ -1210,7 +1210,7 @@ function init(){
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{}); }
   renderHeader(); renderWeekStrip(); renderLogs(); renderCalendar();
   updateComposerState();
-  if(!localStorage.getItem(keyModel)){ setModel('free'); }
+  if(!localStorage.getItem(keyModel)){ setModel('paid'); }
   updateModelUI();
   const mql = window.matchMedia('(prefers-color-scheme: dark)');
   mql.addEventListener?.('change', ()=>{ if((localStorage.getItem(keyTheme)||'system')==='system') applyTheme('system'); });
@@ -1232,4 +1232,5 @@ $('#modelBadge').addEventListener('click', () => {
 });
 </script>
 </body>
+
 </html>
