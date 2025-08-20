@@ -42,7 +42,8 @@
   --err: #ef4444;
   --border: rgba(148,163,184,.22);
   --ring: rgba(124,140,255,.35);
-
+  --support-btn-text: #facc15;   /* amber-400 for dark theme */
+  --support-btn-hover: #78350f;  /* deep amber hover */
   --shadow-sm: 0 1px 2px rgba(0,0,0,.25);
   --shadow:    0 2px 8px rgba(0,0,0,.30);
   --shadow-md: 0 8px 18px rgba(0,0,0,.35);
@@ -75,6 +76,8 @@
     --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
     --shadow-md: 0 8px 16px rgba(0,0,0,.06);
     --shadow-lg: 0 18px 32px rgba(0,0,0,.10);
+  --support-btn-text: #dc2626;   /* red-600 for light theme */
+  --support-btn-hover: #fee2e2;  /* soft pale red hover */
   }
 }
 :root[data-theme="light"]{
@@ -88,6 +91,8 @@
   --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
   --shadow-md: 0 8px 16px rgba(0,0,0,.06);
   --shadow-lg: 0 18px 32px rgba(0,0,0,.10);
+  --support-btn-text: #dc2626;   /* red-600 for light theme */
+  --support-btn-hover: #fee2e2;  /* soft pale red hover */
 }
 /* :root[data-theme="dark"] stays as defaults */
 
@@ -588,6 +593,31 @@ select:focus {
   padding-left: 2px;
   transition: opacity 0.15s ease;
 }
+
+/* Add this for support button styling */
+#supportBtn {
+  font-size: 11px !important;
+  font-weight: 600;
+  color: var(--support-btn-text) !important;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  transition: background .15s;
+  flex: 0 0 auto;
+}
+
+#supportBtn:hover {
+  background: var(--support-btn-hover);
+}
+
+#supportBtn span {
+  font-size: 12px !important;
+}
 </style>
 
 </head>
@@ -602,7 +632,8 @@ select:focus {
         <span id="modelBadge" class="model-badge advanced" style="cursor:pointer;" title="Click to switch model">Advance</span>
       </div>
       <div class="spacer"></div>
-      <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      <!-- Remove themeToggle button, add share button -->
+      <button class="icon-btn" id="shareBtn" aria-label="Share"><i class="fa-solid fa-share-nodes"></i></button>
       <button class="icon-btn" id="settingsBtn" aria-label="Settings"><i class="fa-solid fa-gear"></i></button>
       <button class="icon-btn" id="insightsBtn" aria-label="Insights"><i class="fa-solid fa-chart-line"></i></button>
     </div>
@@ -661,10 +692,16 @@ select:focus {
         <textarea id="composer" placeholder="What happened? (max 256 chars)" maxlength="256" rows="1"></textarea>
         <button class="send" id="send" title="Add"><i class="fa-solid fa-paper-plane"></i></button>
       </div>
-      <div class="meta">
-        <div id="streakText">Streak: 0</div>
-        <div><span id="charCount" class="count">0/256</span></div>
-      </div>
+<div class="meta" style="display: flex; align-items: center; justify-content: space-between;">
+  <div id="streakText" style="flex:1; text-align:left;">Streak: 0</div>
+<a href="https://buymeacoffee.com/austinwin" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+  <button id="supportBtn"
+    onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
+    Your ❤️ Keeps Lifebite Free
+  </button>
+</a>
+  <div style="flex:1; text-align:right;"><span id="charCount" class="count">0/256</span></div>
+</div>
     </div>
   </div>
 </div>
@@ -772,7 +809,7 @@ if (!themeStored) {
 }
 applyTheme(themeStored);
 
-$('#themeToggle').addEventListener('click', ()=>{ const cur = localStorage.getItem(keyTheme) || 'system'; const next = (cur==='system') ? 'dark' : (cur==='dark' ? 'light' : 'system'); localStorage.setItem(keyTheme,next); applyTheme(next); });
+//$('#themeToggle').addEventListener('click', ()=>{ const cur = localStorage.getItem(keyTheme) || 'system'; const next = (cur==='system') ? 'dark' : (cur==='dark' ? 'light' : 'system'); localStorage.setItem(keyTheme,next); applyTheme(next); });
 $('#themeSystem').addEventListener('click', ()=>{ localStorage.setItem(keyTheme,'system'); applyTheme('system'); });
 $('#themeLight').addEventListener('click', ()=>{ localStorage.setItem(keyTheme,'light'); applyTheme('light'); });
 $('#themeDark').addEventListener('click', ()=>{ localStorage.setItem(keyTheme,'dark'); applyTheme('dark'); });
@@ -781,7 +818,11 @@ function applyTheme(mode){
   if(mode==='system'){ document.documentElement.removeAttribute('data-theme'); }
   else{ document.documentElement.setAttribute('data-theme', mode); }
   const dark = (mode==='system') ? window.matchMedia('(prefers-color-scheme: dark)').matches : (mode==='dark');
-  $('#themeToggle').querySelector('i').className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  const themeToggle = $('#themeToggle');
+  if (themeToggle) {
+    const icon = themeToggle.querySelector('i');
+    if (icon) icon.className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  }
 }
 
 /* ---------- Model Badge & Description ---------- */
@@ -1238,7 +1279,72 @@ $('#modelBadge').addEventListener('click', () => {
   const modelSelect = $('#modelSelect');
   if (modelSelect) modelSelect.value = nextModel;
 });
+
+// Share button logic
+$('#shareBtn').addEventListener('click', shareLifebite);
+
+function shareLifebite() {
+  const shareData = {
+    title: 'LifeBite – Daily Moments & Advice',
+    text: 'Track your daily moments and get personalized life advice with LifeBite!',
+    url: window.location.href
+  };
+
+  if (navigator.share) {
+    navigator.share(shareData)
+      .then(() => {
+        // Optionally show a toast or log
+        // showShareToast('Shared successfully!');
+        console.log('Shared successfully!');
+      })
+      .catch((err) => {
+        console.error('Error sharing:', err);
+        if (err.name !== 'AbortError') {
+          fallbackShare();
+        }
+      });
+  } else {
+    fallbackShare();
+  }
+}
+
+function fallbackShare() {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => {
+        showShareToast('URL copied to clipboard! Share it with your friends.');
+      })
+      .catch(err => {
+        console.error('Clipboard API failed:', err);
+        fallbackCopyUsingExecCommand();
+      });
+  } else {
+    fallbackCopyUsingExecCommand();
+  }
+}
+
+function fallbackCopyUsingExecCommand() {
+  const tempInput = document.createElement('input');
+  tempInput.value = window.location.href;
+  document.body.appendChild(tempInput);
+  tempInput.select();
+  try {
+    document.execCommand('copy');
+    showShareToast('URL copied to clipboard! Share it with your friends.');
+  } catch (err) {
+    alert('Copy failed. Please copy the URL manually.');
+  }
+  document.body.removeChild(tempInput);
+}
+
+function showShareToast(msg) {
+  console.log("share lifebite ");
+}
 </script>
+
+<!-- Add a toast for fallback sharing -->
+<div id="shareToast" style="display:none;position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:10px 18px;font-size:14px;z-index:100;box-shadow:var(--shadow);font-weight:600;">URL copied to clipboard! Share it with your friends.</div>
+
 </body>
 
 </html>
