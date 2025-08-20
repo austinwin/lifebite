@@ -2,18 +2,27 @@
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/austinwin)  
 
 [Lifebite App](https://austinwin.github.io/lifebite/): https://austinwin.github.io/lifebite/  
-LifeBite is a Progressive Web App (PWA) that helps you track daily moments and get personalized life advice. Log brief entries throughout your day, and the app will generate personalized insights and recommendations based on your activities.
+LifeBite is a privacy-first Progressive Web App (PWA) for logging the small but important moments of daily life. Designed for kids, adults, or anyone who wants to capture their day, it stores everything locally on your device - no accounts, no servers, no tracking.
+
+Every “bite” is short and raw (max 256 characters) - once written it cannot be edited, and after a daily summary is generated, logs cannot be deleted. This ensures authenticity and keeps your reflections unfiltered.
+
+At the end of the day, LifeBite summarizes your bites into key themes, highlights what’s working, where to improve, and even suggests new ideas, trends, or developments to explore tomorrow.  
+👉 A “bite” is just that — a small, honest piece of your day. Log, reflect, learn, repeat.  
 
 ## Features
 
 - 📝 **Quick Logging**: Easily record moments throughout your day (limited to 280 characters per entry)
 - 📅 **Date Navigation**: Browse through your entries with intuitive calendar and week strip navigation
-- 🧠 **AI-Powered Insights**: Get personalized advice based on your daily logs
+- 🧠 **AI-Powered Insights**: AI generates personalized reflections before bedtime  
 - 📊 **Structured Feedback**: Receive specific recommendations for what to keep doing, improve, adjust in your schedule, and next actions
 - 🔄 **Offline Support**: Continue logging even when offline - your data will sync when connection is restored
 - 🌙 **Theme Options**: Choose between light, dark, or system theme
 - 💾 **Data Control**: Export and import your data for backup or migration
 - 📱 **Mobile-First Design**: Optimized for mobile devices with responsive layout
+- 🔄 **Immutable logs**: Capture raw, authentic thoughts with no edits after summary.
+- 🔄 **For all ages**: Simple UI that works for both kids and adults.
+- 🔄 **Daily streaks**: Track how many days in a row you’ve logged.
+- 🔄 **Privacy-first**: All data stored in local storage only, no log.  
 
 ## Installation
 
